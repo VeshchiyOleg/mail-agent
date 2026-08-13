@@ -1,0 +1,16 @@
+# Скопируйте в config.yaml (уже в .gitignore) и подставьте реальный endpoint.
+# Секрет самого ключа сюда не пишем — только имя переменной окружения,
+# из которой он будет прочитан (см. .env.example).
+llm:
+  endpoint: "https://example.invalid/api/llm"
+  model: "claude-sonnet"
+  apiKeyEnv: "MAIL_AGENT_LLM_API_KEY"
+  timeoutMs: 30000
+agent:
+  maxSteps: 6
+store:
+  path: "./data"
+mail:
+  pollSeconds: 30
+  profile: "Outlook"
+  folder: "Inbox"

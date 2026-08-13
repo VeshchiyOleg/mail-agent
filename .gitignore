@@ -13,3 +13,9 @@ target/
 data/
 *.local.yaml
 .env
+config.yaml
+
+# not project files — Claude Code setup materials that landed in this dir,
+# must never end up in the submitted repo
+claude-code-setup.md
+claude-code-setup.pdf
