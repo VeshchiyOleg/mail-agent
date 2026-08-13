@@ -1,0 +1,15 @@
+target/
+*.class
+*.jar
+!.mvn/wrapper/*.jar
+
+.idea/
+*.iml
+.vscode/
+
+.DS_Store
+
+# local runtime data / secrets — never commit these
+data/
+*.local.yaml
+.env

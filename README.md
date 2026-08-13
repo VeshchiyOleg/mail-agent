@@ -1,0 +1,66 @@
+# Mail Agent
+
+Mini-ассистент по образу «Коли»: читает непрочитанные письма в Outlook,
+прогоняет тело письма через LLM tool-loop и отвечает письмом. Подробности
+задания — `Тестовое-задание-ИИ-агенты.pdf`, план реализации — `PLAN.md`.
+
+## Требования к окружению
+
+- **Java 8** (именно 8). На Apple Silicon нет официальной arm64-сборки —
+  здесь используется x86_64 JDK 8 (`jdk1.8.0_281`) под Rosetta 2.
+- Maven по умолчанию (через Homebrew) может резолвиться на другой,
+  более новый JDK — перед сборкой на Mac явно укажите `JAVA_HOME`:
+
+  ```bash
+  export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home
+  ```
+
+- На Windows-стенде для защиты Outlook + JACOB (`jacob-1.20.x64.dll` на
+  `PATH`) должны быть уже установлены отдельно.
+- **Важно:** `net.sf.jacob-project:jacob:1.20` из задания не опубликован в
+  Maven Central (только 1.14.3). Для компиляции здесь используется 1.14.3
+  (API стабилен между версиями). На Windows-стенде перед живым JACOB-прогоном
+  нужно поставить в pom.xml реальный `jacob-1.20.jar`, соответствующий уже
+  установленной `jacob-1.20.x64.dll`, — иначе возможна ошибка нативных
+  сигнатур на рантайме. Команда для локальной установки такого jar в Maven-репозиторий:
+
+  ```bash
+  mvn install:install-file -Dfile=jacob-1.20.jar \
+    -DgroupId=net.sf.jacob-project -DartifactId=jacob \
+    -Dversion=1.20 -Dpackaging=jar
+  ```
+
+  и поднять версию в `pom.xml` до `1.20`.
+
+## Build
+
+```bash
+mvn -q clean package
+```
+
+Собирает fat-jar (`target/mail-agent-0.1.0-SNAPSHOT.jar`) через
+maven-shade-plugin.
+
+## Test
+
+```bash
+mvn test
+```
+
+Должно быть зелёным на машине без Outlook (JACOB исключён из
+test-classpath — см. `pom.xml`, `maven-surefire-plugin`).
+
+## Run
+
+```bash
+java -jar target/mail-agent-0.1.0-SNAPSHOT.jar
+```
+
+Конфигурация — см. `config.yaml` (путь передаётся отдельно, будет уточнено
+по мере реализации). Секреты (ключ LLM и т.п.) — только через переменные
+окружения, имя переменной задаётся в конфиге.
+
+## Как я работал с ИИ
+
+_Заполняется по ходу разработки: какие промпты использовались, что
+проверялось у модели, что было отклонено._
