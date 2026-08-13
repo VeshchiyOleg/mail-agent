@@ -1,0 +1,17 @@
+<configuration>
+    <!--
+      Logback picks this up automatically instead of logback.xml when
+      present on the test classpath. Console-only — no FILE appender, so
+      `mvn test` doesn't scatter a logs/ directory around the working tree.
+    -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>

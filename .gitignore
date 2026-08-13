@@ -12,6 +12,7 @@ dependency-reduced-pom.xml
 
 # local runtime data / secrets — never commit these
 data/
+logs/
 *.local.yaml
 .env
 config.yaml
