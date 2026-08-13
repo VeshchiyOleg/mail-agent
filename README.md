@@ -84,6 +84,25 @@ Anthropic Messages API (модель `claude-sonnet-5` вернула штатн
 `content`/`usage`/`stop_reason`). `HttpLlmClient` будет реализован под этот
 формат, включая `tools`/`tool_use` в content-блоках для tool-calling.
 
+## Проверено вживую (verification-before-completion)
+
+- `mvn test` → 49/49 зелёных, без Outlook (JACOB исключён из test-classpath).
+- `mvn clean package` → собирает `target/mail-agent-0.1.0-SNAPSHOT.jar` (~6.8 МБ).
+- `java -jar target/mail-agent-0.1.0-SNAPSHOT.jar` без `MAIL_AGENT_LLM_API_KEY` в env →
+  чистое `config_error message=...`, exit code 1, без стектрейса.
+- Тот же запуск с ключом, но на Mac (без Outlook) → доходит до подключения
+  к Outlook через JACOB и падает там на `UnsatisfiedLinkError` (нет
+  `jacob-1.20.x64.dll` на этой платформе) — перехватывается отдельно как
+  `LinkageError` и логируется одной понятной строкой
+  (`outlook_com_unavailable message=...`), без стектрейса и без падения
+  всего процесса в консоль. Это ожидаемо: `OutlookMailChannel` в принципе
+  нельзя запустить вне Windows+Outlook — живая проверка самого JACOB
+  (реальное письмо → ответ) остаётся за Windows-стендом, доступ к которому
+  пока не подтверждён (см. PLAN.md).
+- `HttpLlmClient` проверен против `MockWebServer` (6/6 тестов) на точном
+  wire-формате, который был подтверждён разведочным `curl`-запросом к
+  реальному прокси-эндпоинту заказчика.
+
 ## Как я работал с ИИ
 
 _Заполняется по ходу разработки: какие промпты использовались, что
