@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -120,5 +121,24 @@ public class AgentLoopTest {
         } finally {
             assertEquals(3, llm.callHistory().size());
         }
+    }
+
+    @Test
+    public void runWithOnToolCallInvokesCallbackWithToolNameForEachCall() {
+        ToolRegistry registry = new ToolRegistry().register(new CurrentDatetimeTool(FIXED_CLOCK));
+
+        MockLlmClient llm = new MockLlmClient(Arrays.asList(
+                ChatResponse.toolCalls(Collections.singletonList(new ToolCall("call-1", "current_datetime", "{}"))),
+                ChatResponse.text("Сегодня 2026-08-13.")
+        ));
+
+        AgentLoop loop = new AgentLoop(llm, registry, 6);
+        List<String> calledTools = new ArrayList<>();
+        Consumer<String> onToolCall = calledTools::add;
+
+        String result = loop.run(userAsks("Какое сегодня число?"), onToolCall);
+
+        assertEquals("Сегодня 2026-08-13.", result);
+        assertEquals(Collections.singletonList("current_datetime"), calledTools);
     }
 }
