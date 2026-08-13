@@ -12,6 +12,7 @@ import com.mailagent.tools.ToolRegistry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Drives the LLM tool-calling loop: ask the model, execute whatever tools
@@ -33,6 +34,16 @@ public class AgentLoop {
     }
 
     public String run(List<ChatMessage> initialMessages) {
+        return run(initialMessages, toolName -> {
+        });
+    }
+
+    /**
+     * @param onToolCall notified with the tool's name right before each
+     *                   execution — lets callers audit-log tool usage
+     *                   without AgentLoop needing to know about AuditLog.
+     */
+    public String run(List<ChatMessage> initialMessages, Consumer<String> onToolCall) {
         List<ChatMessage> messages = new ArrayList<>(initialMessages);
         List<ToolSpec> specs = toolRegistry.specs();
 
@@ -45,6 +56,7 @@ public class AgentLoop {
 
             messages.add(ChatMessage.assistantToolCalls(response.getToolCalls()));
             for (ToolCall call : response.getToolCalls()) {
+                onToolCall.accept(call.getName());
                 String result = executeSafely(call);
                 messages.add(ChatMessage.tool(call.getId(), result));
             }
