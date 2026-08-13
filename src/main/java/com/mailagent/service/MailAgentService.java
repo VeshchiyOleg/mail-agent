@@ -71,8 +71,14 @@ public class MailAgentService {
             log.info("agent_mail_replied msgId={}", msg.getId());
         } catch (RuntimeException e) {
             log.warn("agent_mail_failed msgId={} reason={}", msg.getId(), e.getClass().getSimpleName());
-            mailChannel.reply(msg, FALLBACK_REPLY);
-            auditLog.append("agent_mail_fallback", details("msgId", msg.getId(), "reason", e.getClass().getSimpleName()));
+            try {
+                mailChannel.reply(msg, FALLBACK_REPLY);
+                auditLog.append("agent_mail_fallback", details("msgId", msg.getId(), "reason", e.getClass().getSimpleName()));
+            } catch (RuntimeException replyFailure) {
+                log.warn("agent_mail_fallback_reply_failed msgId={} reason={}", msg.getId(), replyFailure.getClass().getSimpleName());
+                auditLog.append("agent_mail_fallback_failed",
+                        details("msgId", msg.getId(), "reason", replyFailure.getClass().getSimpleName()));
+            }
         } finally {
             seenStore.markSeen(msg.getId());
         }
