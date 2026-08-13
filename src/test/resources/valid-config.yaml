@@ -1,0 +1,13 @@
+llm:
+  endpoint: "https://api.example.com/v1/chat"
+  model: "test-model"
+  apiKeyEnv: "MAIL_AGENT_LLM_API_KEY"
+  timeoutMs: 30000
+agent:
+  maxSteps: 6
+store:
+  path: "./data"
+mail:
+  pollSeconds: 30
+  profile: "Outlook"
+  folder: "Inbox"
