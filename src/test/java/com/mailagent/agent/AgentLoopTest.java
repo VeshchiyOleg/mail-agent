@@ -141,4 +141,28 @@ public class AgentLoopTest {
         assertEquals("Сегодня 2026-08-13.", result);
         assertEquals(Collections.singletonList("current_datetime"), calledTools);
     }
+
+    @Test
+    public void errorToolResultIsAlwaysValidJson_evenWithControlCharsInToolName() throws Exception {
+        // A hallucinated/adversarial tool_call could contain arbitrary
+        // characters in its name (newlines, quotes) — the error we feed
+        // back to the model must stay well-formed JSON regardless.
+        ToolRegistry registry = new ToolRegistry();
+
+        String weirdToolName = "evil\"tool\nname";
+        MockLlmClient llm = new MockLlmClient(Arrays.asList(
+                ChatResponse.toolCalls(Collections.singletonList(new ToolCall("call-1", weirdToolName, "{}"))),
+                ChatResponse.text("ok")
+        ));
+
+        AgentLoop loop = new AgentLoop(llm, registry, 6);
+        loop.run(userAsks("hi"));
+
+        List<ChatMessage> secondCallMessages = llm.callHistory().get(1);
+        String toolResultContent = secondCallMessages.get(secondCallMessages.size() - 1).getContent();
+
+        com.fasterxml.jackson.databind.JsonNode parsed =
+                new com.fasterxml.jackson.databind.ObjectMapper().readTree(toolResultContent);
+        assertTrue(parsed.get("error").asText().contains(weirdToolName));
+    }
 }
