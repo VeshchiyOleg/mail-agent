@@ -8,6 +8,7 @@ import com.mailagent.llm.LlmClient;
 import com.mailagent.llm.MockLlmClient;
 import com.mailagent.llm.ToolCall;
 import com.mailagent.llm.ToolSpec;
+import com.mailagent.mail.MailChannel;
 import com.mailagent.mail.MockMailChannel;
 import com.mailagent.mail.Msg;
 import com.mailagent.store.ReminderStore;
@@ -166,6 +167,40 @@ public class MailAgentServiceTest {
         assertEquals(MailAgentService.FALLBACK_REPLY, replyBody);
         assertFalse(replyBody.contains("RuntimeException"));
         assertFalse(replyBody.contains("connect timed out"));
+        assertTrue(seenStore.isSeen("msg-1"));
+        assertTrue(auditLog.verifyChain());
+    }
+
+    @Test
+    public void mailChannelReplyFailureDuringFallbackDoesNotEscapeProcessUnread() throws IOException {
+        // Realistic OutlookMailChannel scenario: COM is down, so even the
+        // fallback reply() call fails. The service must not let that
+        // second exception escape — it should log/audit and move on,
+        // still marking the message seen so the cycle doesn't get stuck.
+        ReminderStore reminderStore = reminderStore();
+        Msg theMsg = msg("msg-1", "Какое сегодня число?");
+        MailChannel channel = new MailChannel() {
+            @Override
+            public List<Msg> fetchUnread() {
+                return Collections.singletonList(theMsg);
+            }
+
+            @Override
+            public void reply(Msg msg, String body) {
+                throw new RuntimeException("COM error: Outlook not responding");
+            }
+        };
+        SeenStore seenStore = seenStore();
+        AuditLog auditLog = auditLog();
+
+        LlmClient failingLlm = (messages, tools) -> {
+            throw new RuntimeException("connect timed out");
+        };
+        AgentLoop agentLoop = new AgentLoop(failingLlm, registryFor(reminderStore), 6);
+        MailAgentService service = new MailAgentService(channel, seenStore, agentLoop, auditLog);
+
+        service.processUnread();
+
         assertTrue(seenStore.isSeen("msg-1"));
         assertTrue(auditLog.verifyChain());
     }
