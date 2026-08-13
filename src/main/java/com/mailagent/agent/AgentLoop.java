@@ -1,5 +1,7 @@
 package com.mailagent.agent;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mailagent.llm.ChatMessage;
 import com.mailagent.llm.ChatResponse;
 import com.mailagent.llm.LlmClient;
@@ -22,6 +24,8 @@ import java.util.function.Consumer;
  * message so the model can recover.
  */
 public class AgentLoop {
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final LlmClient llmClient;
     private final ToolRegistry toolRegistry;
@@ -80,7 +84,15 @@ public class AgentLoop {
     }
 
     private static String errorJson(String message) {
-        String escaped = message == null ? "" : message.replace("\\", "\\\\").replace("\"", "\\\"");
-        return "{\"error\":\"" + escaped + "\"}";
+        ObjectNode node = MAPPER.createObjectNode();
+        node.put("error", message == null ? "" : message);
+        try {
+            return MAPPER.writeValueAsString(node);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            // ObjectNode -> String serialization of two plain string fields
+            // cannot realistically fail; fall back defensively rather than
+            // propagate and break the tool-loop's error-recovery path.
+            return "{\"error\":\"internal error formatting tool error\"}";
+        }
     }
 }
