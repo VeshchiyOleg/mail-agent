@@ -191,5 +191,5 @@ Self-review нашёл и исправил два реальных дефект�
 - [x] структурные логи, без ПДн (отдельный тест `MailAgentServiceLoggingTest`)
 - [x] аудит-журнал действий (hash-chain, `AuditLog`/`AuditEntry`)
 - [x] `PLAN.md` + README
-- [ ] экспорт сессии Claude Code — добавить перед сдачей (`/export` или файлы `~/.claude/projects/.../*.jsonl`)
+- [x] экспорт сессии Claude Code — `claude-session-export.jsonl` (три секрета, попавшие в переписку открытым текстом, заменены плейсхолдерами перед публикацией — см. коммит)
 - [ ] живой JACOB-прогон на Windows-стенде — доступ пока не подтверждён заказчиком (см. `PLAN.md`)
